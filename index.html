@@ -450,7 +450,7 @@
 //  cuando conectes tu Google Sheet
 // ══════════════════════════════════════════
 const SHEET_ID   = '1N7_uTtHxVCNu9vrUmHkETLJbYzOAVebyiEHqlacfIrI';
-const APPS_SCRIPT_URL = 'PENDIENTE'; // ← se actualiza cuando el usuario pegue su URL
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwc6sVTend9GqTJ2khPPXvBQsjM_MPZOMfXbD7Fwqf-f5nfgeJmpUvYVNgCAF7xOeNF/exec';
 
 // ══════════════════════════════════════════
 //  DATOS DE DEMO (se usan si no hay Sheet)
@@ -771,14 +771,49 @@ function renderAll(data) {
     </footer>
   `;
 
-  // Intersection observer
+  // Intersection observer — make sections visible
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
   }, {threshold: 0.04});
   document.querySelectorAll('.section').forEach(s => obs.observe(s));
+
+  // Force first section visible immediately
+  setTimeout(() => {
+    const first = document.querySelector('.section');
+    if (first) first.classList.add('visible');
+  }, 50);
 }
 
 // ── LOAD FROM GOOGLE SHEETS or DEMO ──
+// ── NAVEGACIÓN ──
+function goTo(id, btn) {
+  const tryScroll = (n) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({behavior:'smooth', block:'start'});
+    } else if (n > 0) {
+      setTimeout(() => tryScroll(n-1), 200);
+    }
+  };
+  tryScroll(15);
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+// Actualizar nav al hacer scroll
+window.addEventListener('scroll', () => {
+  const secs = document.querySelectorAll('section[id]');
+  if (!secs.length) return;
+  let current = secs[0].id;
+  secs.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 160) current = s.id;
+  });
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    const onc = b.getAttribute('onclick') || '';
+    b.classList.toggle('active', onc.includes("'" + current + "'"));
+  });
+}, {passive:true});
+
 async function loadData() {
   // Always show demo data instantly
   renderAll(DEMO_DATA);
